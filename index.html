@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>🍽 통합 메뉴 추천기</title>
+  <title>🍽 메뉴 추천하긔</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -77,8 +77,8 @@
   <div class="app" role="application" aria-label="메뉴 추천기">
     <header>
       <div>
-        <h1>🍽 메뉴 추천기 — 아점저 · 한/양/중 · 매/순</h1>
-        <div class="subtitle">원하는 식사 시간과 스타일, 매운 정도를 선택하면 여러 메뉴와 사진을 보여줍니다.</div>
+        <h1>🍽 메뉴 추천기 아침/점심/저녁 · 한/양/중 ·</h1>
+        <div class="subtitle">원하는 식사와, 먹고픈거, 매운 정도를 선택하면 여러 메뉴와 사진을 보여줍니다!</div>
       </div>
       <div class="pillgroup">
         <button class="btn" id="btn-random">무작위 새 추천</button>
@@ -106,7 +106,7 @@
         <div class="info" id="selected-info">선택: —</div>
         <div class="actions">
           <button id="btn-copy" class="small">리스트 복사</button>
-          <button id="btn-export" class="small">JSON 내보내기</button>
+          <button id="btn-export" class="small">안도를 먹방하기</button>
           <button id="btn-showall" class="small">모두 보기</button>
         </div>
       </div>
@@ -131,7 +131,7 @@
 /* ---------- 1) 질문 옵션 ---------- */
 const TIMES = ["아침","점심","저녁"];
 const STYLES = ["한식","양식","중식"];
-const SPICIES = ["매움","순함"];
+const SPICIES = ["매운거","순한거"];
 
 /* ---------- 2) 메뉴 풀 (18개 카테고리: 아침/점심/저녁 × 한/양/중 × 매/순) ----------
    각 카테고리에 여러 메뉴(이름) 배열을 넣음 — 사용자가 선택하면 이 목록을 기준으로 랜덤/전체 출력.
