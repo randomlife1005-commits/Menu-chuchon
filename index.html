@@ -1,124 +1,429 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>🍽 오늘 뭐 먹지?</title>
+  <meta charset="utf-8" />
+  <title>🍽 통합 메뉴 추천기</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fafafa; }
-    h1 { margin-top: 20px; color: #333; }
-    .filters { margin: 20px 0; }
-    select { margin: 5px; padding: 5px; font-size: 16px; }
-    button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    .menu-list { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-    .menu-item {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      margin: 10px;
-      padding: 10px;
-      width: 180px;
-      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    :root{
+      --bg1:#f6f8ff; --card:#ffffff; --accent:#6a5af9; --muted:#7b7b8a;
+      --radius:14px;
     }
-    .menu-item img {
-      width: 100%;
-      border-radius: 6px;
-      object-fit: cover;
-      height: 120px;
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, "Noto Sans KR", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    body{
+      background:linear-gradient(180deg,var(--bg1),#fff);
+      display:flex;align-items:center;justify-content:center;padding:24px;
     }
-    .menu-item p {
-      margin: 5px 0 0 0;
-      font-weight: bold;
+
+    .app{
+      width:100%; max-width:920px; background:var(--card); border-radius:18px;
+      padding:20px; box-shadow:0 10px 30px rgba(30,30,50,0.08);
+    }
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{font-size:20px;margin:0;color:#222}
+    .subtitle{color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .btn{
+      padding:10px 14px;border-radius:10px;border:none;background:var(--accent);
+      color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(106,90,249,0.16);
+    }
+    .btn.secondary{background:#f0f2ff;color:var(--accent);box-shadow:none;border:1px solid rgba(106,90,249,0.08)}
+    .pillgroup{display:flex;gap:8px;flex-wrap:wrap}
+
+    .step{
+      background:#fbfbff;padding:12px;border-radius:12px;border:1px solid rgba(0,0,0,0.03);
+      min-width:200px;
+    }
+    .step h3{margin:0 0 8px 0;font-size:13px;color:var(--muted)}
+    .step .options{display:flex;flex-wrap:wrap;gap:8px}
+    .choice{
+      padding:8px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);cursor:pointer;background:white;
+      font-weight:600;color:#333;font-size:14px;
+    }
+    .choice.active{background:var(--accent);color:white;box-shadow:0 6px 14px rgba(106,90,249,0.12);}
+
+    main{margin-top:18px}
+    .result-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .result-head .info{color:var(--muted);font-size:13px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:12px}
+
+    .card{
+      background:linear-gradient(180deg,#ffffff,#fbfbff);
+      border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center;border:1px solid rgba(0,0,0,0.03);
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .card:hover{transform:translateY(-6px);box-shadow:0 14px 40px rgba(30,30,50,0.08)}
+    .thumb{width:72px;height:72px;border-radius:10px;overflow:hidden;flex:0 0 72px;background:#eee}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .meta{flex:1}
+    .meta .title{font-weight:700;color:#222}
+    .meta .sub{color:var(--muted);font-size:13px;margin-top:6px}
+
+    .actions{display:flex;gap:8px;align-items:center;margin-top:12px}
+    .small{padding:8px 10px;border-radius:8px;border:none;background:#f3f4f8;color:#333;cursor:pointer;font-weight:600}
+    pre{white-space:pre-wrap;word-break:break-word;background:#f7f8fb;padding:12px;border-radius:8px;color:#333;font-size:13px}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+    @media (max-width:640px){
+      .controls{flex-direction:column}
+      .step{min-width:100%}
     }
   </style>
 </head>
 <body>
+  <div class="app" role="application" aria-label="메뉴 추천기">
+    <header>
+      <div>
+        <h1>🍽 메뉴 추천기 — 아점저 · 한/양/중 · 매/순</h1>
+        <div class="subtitle">원하는 식사 시간과 스타일, 매운 정도를 선택하면 여러 메뉴와 사진을 보여줍니다.</div>
+      </div>
+      <div class="pillgroup">
+        <button class="btn" id="btn-random">무작위 새 추천</button>
+        <button class="btn secondary" id="btn-reset">처음으로</button>
+      </div>
+    </header>
 
-  <h1>🍽 오늘 뭐 먹지?</h1>
+    <div class="controls" aria-hidden="false">
+      <div class="step" id="step-1">
+        <h3>1. 아침 / 점심 / 저녁</h3>
+        <div class="options" id="opt-time"></div>
+      </div>
+      <div class="step" id="step-2">
+        <h3>2. 한식 / 양식 / 중식</h3>
+        <div class="options" id="opt-style"></div>
+      </div>
+      <div class="step" id="step-3">
+        <h3>3. 매운 / 순한</h3>
+        <div class="options" id="opt-spicy"></div>
+      </div>
+    </div>
 
-  <div class="filters">
-    <select id="time">
-      <option value="아침">아침</option>
-      <option value="점심">점심</option>
-      <option value="저녁">저녁</option>
-    </select>
+    <main>
+      <div class="result-head">
+        <div class="info" id="selected-info">선택: —</div>
+        <div class="actions">
+          <button id="btn-copy" class="small">리스트 복사</button>
+          <button id="btn-export" class="small">JSON 내보내기</button>
+          <button id="btn-showall" class="small">모두 보기</button>
+        </div>
+      </div>
 
-    <select id="style">
-      <option value="한식">한식</option>
-      <option value="중식">중식</option>
-      <option value="양식">양식</option>
-    </select>
+      <div class="cards" id="cards"></div>
 
-    <select id="spicy">
-      <option value="순한맛">순한맛</option>
-      <option value="매운맛">매운맛</option>
-    </select>
+      <div id="debug" style="display:none"><pre id="debugJSON"></pre></div>
+    </main>
 
-    <button onclick="recommendMenu()">추천받기</button>
+    <footer>이미지는 로컬 `images/` 폴더의 파일명과 연결됩니다. 로컬 이미지가 없으면 대체 이미지가 사용됩니다.</footer>
   </div>
 
-  <div id="menuList" class="menu-list"></div>
-
   <script>
-    const menus = [
-      // === 한식 (아침) ===
-      {name:"야채죽", time:"아침", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2016/08/11/00/54/porridge-1585234_1280.jpg"},
-      {name:"달걀찜", time:"아침", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2023/07/09/08/43/egg-8116137_1280.jpg"},
-      {name:"김치볶음밥", time:"아침", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2020/07/18/12/43/fried-rice-5416628_1280.jpg"},
+/*
+  사용법 요약:
+  - 프로젝트 폴더에 images/ 폴더를 만들고, 아래 MENU_IMAGES에 명시된 파일명을 넣어주세요.
+  - 예: images/kimchi-fried-rice.jpg
+  - 로컬 이미지가 없으면 자동으로 picsum 대체 이미지가 나옵니다 (안정적).
+  - 필요하면 MENU_POOL/ MENU_IMAGES를 편집해 메뉴/이미지 추가 가능.
+*/
 
-      // === 한식 (점심) ===
-      {name:"김치찌개", time:"점심", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2019/03/03/20/06/kimchi-4039248_1280.jpg"},
-      {name:"된장찌개", time:"점심", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/03/12/02/08/food-6088122_1280.jpg"},
-      {name:"비빔밥", time:"점심", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2016/12/15/23/48/korean-food-1910684_1280.jpg"},
-      {name:"불고기", time:"점심", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/03/12/02/11/bulgogi-6088123_1280.jpg"},
+/* ---------- 1) 질문 옵션 ---------- */
+const TIMES = ["아침","점심","저녁"];
+const STYLES = ["한식","양식","중식"];
+const SPICIES = ["매움","순함"];
 
-      // === 한식 (저녁) ===
-      {name:"닭볶음탕", time:"저녁", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2022/06/09/13/06/korean-food-7251822_1280.jpg"},
-      {name:"갈비찜", time:"저녁", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2020/07/17/08/25/ribs-5411388_1280.jpg"},
-      {name:"오삼불고기", time:"저녁", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2022/02/08/05/56/squid-7000896_1280.jpg"},
+/* ---------- 2) 메뉴 풀 (18개 카테고리: 아침/점심/저녁 × 한/양/중 × 매/순) ----------
+   각 카테고리에 여러 메뉴(이름) 배열을 넣음 — 사용자가 선택하면 이 목록을 기준으로 랜덤/전체 출력.
+   (원하면 이걸 더 늘려서 10개 이상 항목으로 확장하세요)
+*/
+const MENU_POOL = {
+  "아침-한식-매움": ["김치볶음밥","고추장비빔밥","얼큰 북엇국","부추전","매운 어묵탕","매콤 순두부"],
+  "아침-한식-순함": ["야채죽","달걀찜","두부 샐러드","미역국","전복죽","야채비빔밥(순)"],
+  "아침-양식-매움": ["스파이시 오믈렛","할라피뇨 토스트","핫치킨 샌드","칠리 연어볼","핫소스 스크램블"],
+  "아침-양식-순함": ["그릭요거트볼","아보카도 토스트","프렌치토스트","오트밀+과일","에그베네딕트"],
+  "아침-중식-매움": ["탄탄면(라이트)","마파볶음밥(소량)","매운 완탕","고추기름 계란밥"],
+  "아침-중식-순함": ["계란볶음밥","완자탕","찐빵+차","중식야채죽"],
 
-      // === 중식 ===
-      {name:"짜장면", time:"점심", style:"중식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/10/23/09/09/jajangmyeon-6733580_1280.jpg"},
-      {name:"짬뽕", time:"점심", style:"중식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2022/04/03/08/44/jjamppong-7109361_1280.jpg"},
-      {name:"탕수육", time:"저녁", style:"중식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/07/15/15/52/tangsuyuk-6468312_1280.jpg"},
-      {name:"마파두부", time:"저녁", style:"중식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2017/03/06/16/43/mapo-tofu-2122425_1280.jpg"},
+  "점심-한식-매움": ["제육볶음","닭볶음탕","부대찌개","쭈꾸미볶음","낙지볶음","매운 오삼불고기"],
+  "점심-한식-순함": ["된장찌개","갈비탕","콩나물국밥","비빔밥","순두부찌개","삼계탕"],
+  "점심-양식-매움": ["아라비아따 파스타","스파이시 피자","칠리버거","칠리 리조또","스파이시 타코"],
+  "점심-양식-순함": ["까르보나라","봉골레","리소토","클럽샌드","치즈오믈렛"],
+  "점심-중식-매움": ["짬뽕","마라탕","마파두부덮밥","깐풍기덮밥","사천식 볶음밥"],
+  "점심-중식-순함": ["짜장면","탕수육","새우볶음밥","울면","양주볶음밥"],
 
-      // === 양식 ===
-      {name:"크림파스타", time:"저녁", style:"양식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2016/03/05/19/02/spaghetti-1238529_1280.jpg"},
-      {name:"아라비아따", time:"저녁", style:"양식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2017/03/12/15/55/pasta-2133012_1280.jpg"},
-      {name:"피자", time:"점심", style:"양식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2020/02/03/13/59/pizza-4818148_1280.jpg"},
-      {name:"스테이크", time:"저녁", style:"양식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2017/03/23/12/57/beef-2166822_1280.jpg"},
-      {name:"할라피뇨버거", time:"점심", style:"양식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2015/06/24/16/36/hamburger-820280_1280.jpg"}
-    ];
+  "저녁-한식-매움": ["매운갈비찜","낙지볶음","매운찜닭","매운감자탕","매운 닭발"],
+  "저녁-한식-순함": ["삼계탕","설렁탕","보쌈","갈비찜(순)","해물탕"],
+  "저녁-양식-매움": ["핫윙","스파이시 라자냐","매운 파스타","타코 플래터","핫치킨 피자"],
+  "저녁-양식-순함": ["스테이크","라자냐","크림파스타","리코타샐러드","연어스테이크"],
+  "저녁-중식-매움": ["마라샹궈","마라탕","사천식 짬뽕","마라롱샤","매운 깐풍기"],
+  "저녁-중식-순함": ["양장피","팔보채","동파육","멘보샤","광동식 찜요리"]
+};
 
-    function recommendMenu() {
-      const time = document.getElementById('time').value;
-      const style = document.getElementById('style').value;
-      const spicy = document.getElementById('spicy').value;
+/* ---------- 3) 메뉴명 -> 로컬 이미지 파일 매핑 ----------
+   사용자가 "정확한 음식 이미지"를 원한다고 해서, 여기에서 각 메뉴명에 대응하는 파일명(로컬)을 매핑했습니다.
+   파일명은 images/ 폴더 아래에 넣어주세요 (예: images/kimchi-fried-rice.jpg).
+   만약 파일이 없으면 자동으로 picsum 대체 이미지를 사용합니다.
+*/
+const MENU_IMAGES = {
+  // 아침-한식
+  "김치볶음밥":"kimchi-fried-rice.jpg",
+  "고추장비빔밥":"gochujang-bibimbap.jpg",
+  "얼큰 북엇국":"spicy-dried-pollack-soup.jpg",
+  "부추전":"buchujeon.jpg",
+  "매운 어묵탕":"spicy-fishcake-soup.jpg",
+  "매콤 순두부":"spicy-sundubu.jpg",
+  "야채죽":"vegetable-porridge.jpg",
+  "달걀찜":"steamed-egg.jpg",
+  "두부 샐러드":"tofu-salad.jpg",
+  "미역국":"seaweed-soup.jpg",
+  "전복죽":"abalone-porridge.jpg",
+  "야채비빔밥(순)":"vegetable-bibimbap.jpg",
 
-      let filtered = menus.filter(m => 
-        m.time === time && m.style === style && m.spicy === spicy
-      );
+  // 아침-양식
+  "스파이시 오믈렛":"spicy-omelette.jpg",
+  "할라피뇨 토스트":"jalapeno-toast.jpg",
+  "핫치킨 샌드":"hot-chicken-sandwich.jpg",
+  "칠리 연어볼":"chili-salmon-bowl.jpg",
+  "핫소스 스크램블":"hot-scrambled-egg.jpg",
+  "그릭요거트볼":"greek-yogurt-bowl.jpg",
+  "아보카도 토스트":"avocado-toast.jpg",
+  "프렌치토스트":"french-toast.jpg",
+  "오트밀+과일":"oatmeal-fruit.jpg",
+  "에그베네딕트":"eggs-benedict.jpg",
 
-      if (filtered.length === 0) {
-        // 해당 조합에 없으면 전체에서 랜덤 4개 추천
-        filtered = menus.sort(() => Math.random() - 0.5).slice(0, 4);
-      } else {
-        // 해당 조합에서 랜덤 4개 추천 (중복 방지)
-        filtered = filtered.sort(() => Math.random() - 0.5).slice(0, 4);
+  // 아침-중식
+  "탄탄면(라이트)":"tantanmen.jpg",
+  "마파볶음밥(소량)":"mapo-fried-rice.jpg",
+  "매운 완탕":"spicy-wonton.jpg",
+  "고추기름 계란밥":"chili-oil-egg-rice.jpg",
+  "계란볶음밥":"egg-fried-rice.jpg",
+  "완자탕":"meatball-soup.jpg",
+  "찐빵+차":"steamed-bread.jpg",
+  "중식야채죽":"chinese-style-porridge.jpg",
+
+  // 점심-한식
+  "제육볶음":"stirfried-pork.jpg",
+  "닭볶음탕":"spicy-chicken-stew.jpg",
+  "부대찌개":"budae-jjigae.jpg",
+  "쭈꾸미볶음":"stirfried-webfoot-octopus.jpg",
+  "낙지볶음":"stirfried-octopus.jpg",
+  "매운 오삼불고기":"spicy-squid-pork.jpg",
+  "된장찌개":"doenjang-jjigae.jpg",
+  "갈비탕":"galbitang.jpg",
+  "콩나물국밥":"bean-sprout-soup-rice.jpg",
+  "비빔밥":"bibimbap.jpg",
+  "순두부찌개":"sundubu-jjigae.jpg",
+  "삼계탕":"samgyetang.jpg",
+
+  // 점심-양식
+  "아라비아따 파스타":"arrabbiata-pasta.jpg",
+  "스파이시 피자":"spicy-pizza.jpg",
+  "칠리버거":"chili-burger.jpg",
+  "칠리 리조또":"chili-risotto.jpg",
+  "스파이시 타코":"spicy-taco.jpg",
+  "까르보나라":"carbonara.jpg",
+  "봉골레":"vongole.jpg",
+  "리소토":"risotto.jpg",
+  "클럽샌드":"club-sandwich.jpg",
+  "치즈오믈렛":"cheese-omelet.jpg",
+
+  // 점심-중식
+  "짬뽕":"jjambbong.jpg",
+  "마라탕":"mala-tang.jpg",
+  "마파두부덮밥":"mapo-rice.jpg",
+  "깐풍기덮밥":"kanpunggi-rice.jpg",
+  "사천식 볶음밥":"sichuan-fried-rice.jpg",
+  "짜장면":"jajangmyeon.jpg",
+  "탕수육":"tangsuyuk.jpg",
+  "새우볶음밥":"shrimp-fried-rice.jpg",
+  "울면":"ulamyeon.jpg",
+  "양주볶음밥":"yangju-fried-rice.jpg",
+
+  // 저녁-한식
+  "매운갈비찜":"spicy-braised-ribs.jpg",
+  "매운찜닭":"spicy-jjimdak.jpg",
+  "매운감자탕":"spicy-pork-bone-soup.jpg",
+  "매운 닭발":"spicy-chicken-feet.jpg",
+  "삼계탕":"samgyetang-dinner.jpg",
+  "설렁탕":"seolleongtang.jpg",
+  "보쌈":"bossam.jpg",
+  "갈비찜(순)":"braised-ribs.jpg",
+  "해물탕":"seafood-stew.jpg",
+
+  // 저녁-양식
+  "핫윙":"hot-wings.jpg",
+  "스파이시 라자냐":"spicy-lazagna.jpg",
+  "타코 플래터":"taco-platter.jpg",
+  "핫치킨 피자":"hot-chicken-pizza.jpg",
+  "스테이크":"steak.jpg",
+  "라자냐":"lazagna.jpg",
+  "크림파스타":"cream-pasta.jpg",
+  "리코타샐러드":"ricotta-salad.jpg",
+  "연어스테이크":"salmon-steak.jpg",
+
+  // 저녁-중식
+  "마라샹궈":"mala-xiangguo.jpg",
+  "마라롱샤":"mala-lobster.jpg",
+  "사천식 짬뽕":"sichuan-jjambbong.jpg",
+  "마라탕":"mala-tang-dinner.jpg",
+  "양장피":"yangjangpi.jpg",
+  "팔보채":"palbochae.jpg",
+  "동파육":"dongpo-pork.jpg",
+  "멘보샤":"menbosha.jpg",
+  "광동식 찜요리":"cantonese-steamed.jpg"
+};
+
+/* ---------- 4) 유틸 ---------------------------------- */
+function el(id){return document.getElementById(id)}
+function setActiveOption(containerId, value){
+  const container = el(containerId);
+  Array.from(container.children).forEach(btn=>btn.classList.toggle('active', btn.dataset.value === value));
+}
+
+/* 이미지 경로(로컬) 생성: if exists -> use local, else -> fallback to picsum */
+function getImageForMenu(name){
+  const file = MENU_IMAGES[name];
+  if(file){
+    // 로컬 파일 경로
+    const localPath = `images/${file}`;
+    // 브라우저가 파일 존재 여부를 확인할 수 없으므로 img 태그에서 onerror로 처리.
+    return localPath;
+  }
+  // fallback seed with slug
+  const slug = name.toLowerCase().replace(/[^\w]+/g,'-').replace(/^-+|-+$/g,'');
+  return `https://picsum.photos/seed/${encodeURIComponent(slug)}/400/300`;
+}
+
+/* ---------- 5) UI 초기화, 옵션 버튼 생성 ---------- */
+const optTime = el('opt-time'), optStyle = el('opt-style'), optSpicy = el('opt-spicy');
+const selected = { time:null, style:null, spicy:null };
+
+function makeOptionButtons(container, arr, key){
+  container.innerHTML = '';
+  arr.forEach(v=>{
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = v;
+    b.dataset.value = v;
+    b.onclick = ()=>{
+      selected[key] = v;
+      setActiveOption(container.id, v);
+      updateSelectedInfo();
+      // 자동으로 다음 step으로 포커스: if key is time->focus style; if style->spicy; if spicy->show results
+      if(key==='time') document.querySelector('#opt-style .choice')?.focus();
+      if(key==='style') document.querySelector('#opt-spicy .choice')?.focus();
+      if(selected.time && selected.style && selected.spicy){
+        renderResults();
       }
+    };
+    container.appendChild(b);
+  });
+}
 
-      const menuList = document.getElementById('menuList');
-      menuList.innerHTML = "";
-      filtered.forEach(menu => {
-        menuList.innerHTML += `
-          <div class="menu-item">
-            <img src="${menu.img}" alt="${menu.name}">
-            <p>${menu.name}</p>
-          </div>
-        `;
-      });
-    }
-  </script>
+makeOptionButtons(optTime, TIMES, 'time');
+makeOptionButtons(optStyle, STYLES, 'style');
+makeOptionButtons(optSpicy, SPICIES, 'spicy');
 
+function updateSelectedInfo(){
+  const info = `${selected.time || '—'} · ${selected.style || '—'} · ${selected.spicy || '—'}`;
+  el('selected-info').textContent = `선택: ${info}`;
+}
+
+/* ---------- 6) 결과 렌더링 ---------- */
+function renderResults(showAll=false){
+  if(!(selected.time && selected.style && selected.spicy)){
+    // 아직 선택 안 됨
+    return;
+  }
+  const key = `${selected.time}-${selected.style}-${selected.spicy}`;
+  const pool = MENU_POOL[key] || [];
+  // pool이 없으면 fallback 전체 pool으로 뽑기
+  let choices = pool.length ? [...pool] : Object.values(MENU_POOL).flat();
+
+  // 순서를 섞음
+  choices = choices.sort(()=>Math.random()-0.5);
+
+  // 기본: 6개 추천 (모바일이라면 적게)
+  const count = showAll ? choices.length : Math.min(6, choices.length);
+  const pick = choices.slice(0,count);
+
+  // 출력
+  const cards = el('cards');
+  cards.innerHTML = '';
+  pick.forEach(name=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const thumb = document.createElement('div'); thumb.className='thumb';
+    const img = document.createElement('img');
+    img.alt = name;
+    img.src = getImageForMenu(name);
+    // 만약 로컬 이미지가 없으면 onerror로 대체 picsum 이미지 세팅
+    img.onerror = function(){
+      this.onerror = null;
+      const slug = name.toLowerCase().replace(/[^\w]+/g,'-').replace(/^-+|-+$/g,'');
+      this.src = `https://picsum.photos/seed/${encodeURIComponent(slug)}/400/300`;
+    };
+    thumb.appendChild(img);
+
+    const meta = document.createElement('div'); meta.className='meta';
+    const title = document.createElement('div'); title.className='title'; title.textContent = name;
+    const sub = document.createElement('div'); sub.className='sub';
+    sub.textContent = `${selected.time} · ${selected.style} · ${selected.spicy}`;
+
+    meta.appendChild(title); meta.appendChild(sub);
+
+    card.appendChild(thumb); card.appendChild(meta);
+    cards.appendChild(card);
+  });
+}
+
+/* ---------- 7) 버튼 기능 ---------- */
+el('btn-reset').onclick = ()=>{
+  selected.time = selected.style = selected.spicy = null;
+  Array.from(document.querySelectorAll('.choice')).forEach(b=>b.classList.remove('active'));
+  updateSelectedInfo();
+  el('cards').innerHTML = '';
+};
+
+el('btn-random').onclick = ()=>{
+  // 랜덤으로 각 선택 하나씩
+  selected.time = TIMES[Math.floor(Math.random()*TIMES.length)];
+  selected.style = STYLES[Math.floor(Math.random()*STYLES.length)];
+  selected.spicy = SPICIES[Math.floor(Math.random()*SPICIES.length)];
+  setActiveOption('opt-time', selected.time);
+  setActiveOption('opt-style', selected.style);
+  setActiveOption('opt-spicy', selected.spicy);
+  updateSelectedInfo();
+  renderResults();
+};
+
+el('btn-copy').onclick = ()=>{
+  // copy currently displayed menu names
+  const cards = Array.from(document.querySelectorAll('.card .title')).map(d=>d.textContent);
+  if(cards.length===0){ alert('먼저 추천을 받아주세요.'); return; }
+  navigator.clipboard.writeText(cards.join(', ')).then(()=>alert('메뉴 리스트가 복사되었습니다.'));
+};
+
+el('btn-export').onclick = ()=>{
+  // JSON export of current selection & picks
+  const cards = Array.from(document.querySelectorAll('.card .title')).map(d=>d.textContent);
+  const payload = { selected: {...selected}, picks: cards, timestamp: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `menu-recommend-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+el('btn-showall').onclick = ()=>{
+  renderResults(true);
+};
+
+/* ---------- 8) 초기화 ---------- */
+updateSelectedInfo();
+</script>
 </body>
 </html>
