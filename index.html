@@ -1,191 +1,124 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <title>🍽️ 메뉴 추천기</title>
+  <meta charset="UTF-8">
+  <title>🍽 오늘 뭐 먹지?</title>
   <style>
-    body {
-      font-family: "Pretendard", sans-serif;
-      background: linear-gradient(135deg,#f9f9ff,#e7e9f7);
-      display:flex;justify-content:center;align-items:center;
-      min-height:100vh;margin:0;
+    body { font-family: sans-serif; text-align: center; background: #fafafa; }
+    h1 { margin-top: 20px; color: #333; }
+    .filters { margin: 20px 0; }
+    select { margin: 5px; padding: 5px; font-size: 16px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .menu-list { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+    .menu-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 10px;
+      padding: 10px;
+      width: 180px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
     }
-    .box {
-      background:white;
-      padding:30px;
-      border-radius:20px;
-      box-shadow:0 8px 30px rgba(0,0,0,0.15);
-      max-width:550px;width:90%;
-      text-align:center;
-      transition:0.3s;
+    .menu-item img {
+      width: 100%;
+      border-radius: 6px;
+      object-fit: cover;
+      height: 120px;
     }
-    h2 {
-      margin-top:0;
-      font-size:1.6rem;
-      color:#444;
-    }
-    .options {
-      display:flex;flex-direction:column;
-      gap:12px;margin-top:20px;
-    }
-    button {
-      padding:12px;
-      border:none;
-      border-radius:10px;
-      font-size:16px;
-      cursor:pointer;
-      background:#6a5af9;
-      color:white;
-      font-weight:bold;
-      box-shadow:0 4px 10px rgba(106,90,249,0.3);
-      transition:all 0.2s ease;
-    }
-    button:hover {transform:translateY(-2px);opacity:0.9;}
-
-    .menu-card {
-      display:flex;
-      align-items:center;
-      gap:10px;
-      background:#f7f8ff;
-      margin:10px 0;
-      padding:10px;
-      border-radius:12px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.05);
-    }
-    .menu-card img {
-      width:60px;height:60px;
-      object-fit:cover;
-      border-radius:10px;
-    }
-    .menu-card span {
-      font-weight:500;
-      font-size:1rem;
-      color:#333;
-    }
-    .action-buttons {
-      margin-top:15px;
-      display:flex;gap:10px;justify-content:center;
-    }
-    .copy-btn,.retry-btn {
-      padding:8px 14px;
-      border-radius:8px;
-      font-size:14px;
-      cursor:pointer;
-      background:#ddd;
-      border:none;
-      transition:all 0.2s ease;
-    }
-    .copy-btn:hover,.retry-btn:hover {
-      background:#ccc;
-      transform:scale(1.05);
+    .menu-item p {
+      margin: 5px 0 0 0;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2 id="question">🍳 식사 시간 선택!</h2>
-    <div class="options" id="options"></div>
-    <div id="result"></div>
+
+  <h1>🍽 오늘 뭐 먹지?</h1>
+
+  <div class="filters">
+    <select id="time">
+      <option value="아침">아침</option>
+      <option value="점심">점심</option>
+      <option value="저녁">저녁</option>
+    </select>
+
+    <select id="style">
+      <option value="한식">한식</option>
+      <option value="중식">중식</option>
+      <option value="양식">양식</option>
+    </select>
+
+    <select id="spicy">
+      <option value="순한맛">순한맛</option>
+      <option value="매운맛">매운맛</option>
+    </select>
+
+    <button onclick="recommendMenu()">추천받기</button>
   </div>
 
+  <div id="menuList" class="menu-list"></div>
+
   <script>
-    const QUESTIONS = [
-      { text: "아침 / 점심 / 저녁 중 무엇을 추천할까?", options: ["아침","점심","저녁"] },
-      { text: "밥 vs 면 vs 빵, 뭐 먹고 싶어?", options: ["밥","면","빵"] },
-      { text: "한식 vs 양식 vs 중식?", options: ["한식","양식","중식"] },
-      { text: "매운 거 좋아해?", options: ["매움","순함"] }
+    const menus = [
+      // === 한식 (아침) ===
+      {name:"야채죽", time:"아침", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2016/08/11/00/54/porridge-1585234_1280.jpg"},
+      {name:"달걀찜", time:"아침", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2023/07/09/08/43/egg-8116137_1280.jpg"},
+      {name:"김치볶음밥", time:"아침", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2020/07/18/12/43/fried-rice-5416628_1280.jpg"},
+
+      // === 한식 (점심) ===
+      {name:"김치찌개", time:"점심", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2019/03/03/20/06/kimchi-4039248_1280.jpg"},
+      {name:"된장찌개", time:"점심", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/03/12/02/08/food-6088122_1280.jpg"},
+      {name:"비빔밥", time:"점심", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2016/12/15/23/48/korean-food-1910684_1280.jpg"},
+      {name:"불고기", time:"점심", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/03/12/02/11/bulgogi-6088123_1280.jpg"},
+
+      // === 한식 (저녁) ===
+      {name:"닭볶음탕", time:"저녁", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2022/06/09/13/06/korean-food-7251822_1280.jpg"},
+      {name:"갈비찜", time:"저녁", style:"한식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2020/07/17/08/25/ribs-5411388_1280.jpg"},
+      {name:"오삼불고기", time:"저녁", style:"한식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2022/02/08/05/56/squid-7000896_1280.jpg"},
+
+      // === 중식 ===
+      {name:"짜장면", time:"점심", style:"중식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/10/23/09/09/jajangmyeon-6733580_1280.jpg"},
+      {name:"짬뽕", time:"점심", style:"중식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2022/04/03/08/44/jjamppong-7109361_1280.jpg"},
+      {name:"탕수육", time:"저녁", style:"중식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2021/07/15/15/52/tangsuyuk-6468312_1280.jpg"},
+      {name:"마파두부", time:"저녁", style:"중식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2017/03/06/16/43/mapo-tofu-2122425_1280.jpg"},
+
+      // === 양식 ===
+      {name:"크림파스타", time:"저녁", style:"양식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2016/03/05/19/02/spaghetti-1238529_1280.jpg"},
+      {name:"아라비아따", time:"저녁", style:"양식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2017/03/12/15/55/pasta-2133012_1280.jpg"},
+      {name:"피자", time:"점심", style:"양식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2020/02/03/13/59/pizza-4818148_1280.jpg"},
+      {name:"스테이크", time:"저녁", style:"양식", spicy:"순한맛", img:"https://cdn.pixabay.com/photo/2017/03/23/12/57/beef-2166822_1280.jpg"},
+      {name:"할라피뇨버거", time:"점심", style:"양식", spicy:"매운맛", img:"https://cdn.pixabay.com/photo/2015/06/24/16/36/hamburger-820280_1280.jpg"}
     ];
 
-    // 메뉴 데이터 (앞서 만든 200개+ 메뉴 그대로 사용)
-    const RESULTS = {
-      "아침-밥-한식-매움": ["김치볶음밥","고추장 비빔밥","매운 부추전","매콤한 소고기죽","얼큰 북엇국"],
-      "아침-밥-한식-순함": ["현미밥+샐러드","야채죽","달걀찜+밥","두부 샐러드볼","멸치국+밥"],
-      "아침-밥-양식-매움": ["스파이시 치킨 샐러드볼","칠리 연어 덮밥","할라피뇨 오믈렛","스파이시 볶음 퀴노아"],
-      "아침-밥-양식-순함": ["그릭요거트+그래놀라","연어포케","아보카도 샐러드볼","버터 치킨 라이스","스크램블 에그+밥"],
-      "아침-밥-중식-매움": ["소량 마파두부덮밥","작은 마라볶음밥","고추기름 계란덮밥"],
-      "아침-밥-중식-순함": ["중국식 계란볶음밥","야채죽","완자탕+밥","백탕+밥"],
-      // (중략 — 여기에도 점심/저녁 전체 조합 다 넣기, 위에서 만든 데이터 그대로 복붙)
-      // 점심, 저녁 조합도 다 넣어주세요 (코드 길이 줄이기 위해 생략했지만 원본 그대로 붙이면 됨)
-    };
+    function recommendMenu() {
+      const time = document.getElementById('time').value;
+      const style = document.getElementById('style').value;
+      const spicy = document.getElementById('spicy').value;
 
-    let step=0;
-    let answers=[];
+      let filtered = menus.filter(m => 
+        m.time === time && m.style === style && m.spicy === spicy
+      );
 
-    const qEl=document.getElementById("question");
-    const optEl=document.getElementById("options");
-    const resEl=document.getElementById("result");
-
-    function showQuestion(){
-      resEl.innerHTML="";
-      if(step<QUESTIONS.length){
-        const q=QUESTIONS[step];
-        qEl.textContent=q.text;
-        optEl.innerHTML="";
-        q.options.forEach(choice=>{
-          const btn=document.createElement("button");
-          btn.textContent=choice;
-          btn.onclick=()=>choose(choice);
-          optEl.appendChild(btn);
-        });
-      }else{
-        showResults();
+      if (filtered.length === 0) {
+        // 해당 조합에 없으면 전체에서 랜덤 4개 추천
+        filtered = menus.sort(() => Math.random() - 0.5).slice(0, 4);
+      } else {
+        // 해당 조합에서 랜덤 4개 추천 (중복 방지)
+        filtered = filtered.sort(() => Math.random() - 0.5).slice(0, 4);
       }
-    }
 
-    function choose(val){
-      answers.push(val);
-      step++;
-      showQuestion();
-    }
-
-    function showResults(){
-      const key=answers.join("-");
-      const menus=RESULTS[key] || ["추천 메뉴가 없습니다. (데이터 부족)"];
-      qEl.textContent="🍽️ 추천 메뉴 리스트";
-      optEl.innerHTML="";
-      resEl.innerHTML="";
-      
-      menus.forEach(menu=>{
-        const card=document.createElement("div");
-        card.className="menu-card";
-
-        // Unsplash에서 랜덤 음식 이미지 가져오기
-        const img=document.createElement("img");
-        img.src=`https://source.unsplash.com/80x80/?food,${encodeURIComponent(menu)}`;
-        img.alt=menu;
-
-        const name=document.createElement("span");
-        name.textContent=menu;
-
-        card.appendChild(img);
-        card.appendChild(name);
-        resEl.appendChild(card);
+      const menuList = document.getElementById('menuList');
+      menuList.innerHTML = "";
+      filtered.forEach(menu => {
+        menuList.innerHTML += `
+          <div class="menu-item">
+            <img src="${menu.img}" alt="${menu.name}">
+            <p>${menu.name}</p>
+          </div>
+        `;
       });
-      addActionButtons(menus);
     }
-
-    function addActionButtons(menus){
-      const div=document.createElement("div");
-      div.className="action-buttons";
-
-      const retry=document.createElement("button");
-      retry.className="retry-btn";
-      retry.textContent="🔄 다시 추천";
-      retry.onclick=()=>{step=0;answers=[];showQuestion();};
-
-      const copy=document.createElement("button");
-      copy.className="copy-btn";
-      copy.textContent="📋 리스트 복사";
-      copy.onclick=()=>{
-        navigator.clipboard.writeText(menus.join(", ")).then(()=>alert("메뉴 리스트 복사 완료!"));
-      };
-
-      div.appendChild(retry);
-      div.appendChild(copy);
-      resEl.appendChild(div);
-    }
-
-    showQuestion();
   </script>
+
 </body>
 </html>
