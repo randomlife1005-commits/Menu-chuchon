@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>저녁 메뉴 추천기</title>
+  <style>
+    body {font-family:sans-serif;display:flex;justify-content:center;align-items:center;
+          min-height:100vh;background:#f6f7fb;margin:0;}
+    .box {background:white;padding:30px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.1);
+          max-width:500px;width:100%;text-align:center;}
+    h2 {margin-top:0;}
+    .options {display:flex;flex-direction:column;gap:12px;margin-top:20px;}
+    button {padding:12px;border:none;border-radius:8px;font-size:16px;cursor:pointer;
+            background:#5b6cff;color:white;font-weight:bold;}
+    button:hover {opacity:0.9;}
+    .result {margin-top:20px;font-size:18px;text-align:left;}
+    ul {text-align:left;margin-top:10px;}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2 id="question">메뉴 추천 시작!</h2>
+    <div class="options" id="options"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // 질문 단계
+    const QUESTIONS = [
+      { text: "밥 vs 면 vs 빵, 뭐 먹고 싶어?", options: ["밥","면","빵"] },
+      { text: "한식 vs 양식 vs 중식?", options: ["한식","양식","중식"] },
+      { text: "매운 거 좋아해?", options: ["매움","순함"] }
+    ];
+
+    // 조건별 풍부한 메뉴 리스트
+    const RESULTS = {
+      "밥-한식-매움": ["김치찌개","부대찌개","낙지볶음","닭볶음탕","제육볶음","불닭볶음","청국장","매운 오삼불고기"],
+      "밥-한식-순함": ["된장찌개","갈비탕","콩나물국밥","설렁탕","순두부찌개","비빔밥","죽","삼계탕"],
+      "밥-양식-매움": ["스파이시 카레라이스","칠리 리조또","매운 라자냐","할라피뇨 치킨라이스","타코라이스"],
+      "밥-양식-순함": ["오므라이스","버터 치킨 커리","필라프","하야시라이스","리소토","햄버그스테이크"],
+      "밥-중식-매움": ["마파두부","깐풍기 덮밥","마라샹궈","마라향궈 볶음밥","매운 탕수육"],
+      "밥-중식-순함": ["계란볶음밥","중국식 잡채밥","고추잡채 덮밥","짜장밥","양주볶음밥"],
+
+      "면-한식-매움": ["비빔국수","열무국수","김치말이국수","매운 쫄면","비빔냉면"],
+      "면-한식-순함": ["잔치국수","칼국수","냉면","수제비","콩국수"],
+      "면-양식-매움": ["아라비아따 파스타","스파이시 토마토 파스타","치폴레 크림파스타","매운 해산물 파스타"],
+      "면-양식-순함": ["까르보나라","알리오올리오","봉골레","크림 파스타","토마토 파스타"],
+      "면-중식-매움": ["짬뽕","마라탕","탄탄면","매운 우육면"],
+      "면-중식-순함": ["짜장면","울면","새우볶음면","온면"],
+
+      "빵-한식-매움": ["매운 불고기 샌드위치","불닭마요 토스트","고추장 삼각김밥","스파이시 김밥"],
+      "빵-한식-순함": ["참치마요 삼각김밥","햄치즈 토스트","김밥","계란 샌드위치"],
+      "빵-양식-매움": ["핫치킨버거","멕시칸 샌드위치","스파이시 피자","치폴레 파니니"],
+      "빵-양식-순함": ["치즈버거","BLT 샌드위치","크로와상","클럽 샌드위치","페페로니 피자"],
+      "빵-중식-매움": ["고추잡채와 꽃빵","마라샌드위치","매운 딤섬","매운 바오즈"],
+      "빵-중식-순함": ["크림빵","단팥빵","중국식 만두","꽈배기"]
+    };
+
+    let step = 0;
+    let answers = [];
+
+    const qEl = document.getElementById("question");
+    const optEl = document.getElementById("options");
+    const resEl = document.getElementById("result");
+
+    function showQuestion(){
+      resEl.textContent="";
+      if(step < QUESTIONS.length){
+        const q = QUESTIONS[step];
+        qEl.textContent = q.text;
+        optEl.innerHTML="";
+        q.options.forEach(choice=>{
+          const btn=document.createElement("button");
+          btn.textContent=choice;
+          btn.onclick=()=>choose(choice);
+          optEl.appendChild(btn);
+        });
+      }else{
+        const key = answers.join("-");
+        const menus = RESULTS[key];
+        qEl.textContent="추천 가능한 메뉴 리스트!";
+        optEl.innerHTML="";
+        if(menus){
+          const ul=document.createElement("ul");
+          menus.forEach(m=>{
+            const li=document.createElement("li");
+            li.textContent=m;
+            ul.appendChild(li);
+          });
+          resEl.innerHTML="";
+          resEl.appendChild(ul);
+        }else{
+          resEl.textContent="조건에 맞는 메뉴가 아직 없어요 😢";
+        }
+      }
+    }
+
+    function choose(val){
+      answers.push(val);
+      step++;
+      showQuestion();
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
